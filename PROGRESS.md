@@ -10,6 +10,19 @@
 
 **Dernière mise à jour : 2026-10-06**
 
+## UX/UI — Incrément 2
+
+- Audit initial réalisé sur les pages existantes, la navigation, les cartes, les formulaires et les spécifications métier.
+- Tokens visuels centralisés, thème clair comme valeur initiale, focus clavier global et lien d'évitement ajoutés.
+- Navigation mobile ajoutée et limitée aux routes réellement disponibles ; les mots de passe démo ne sont plus préremplis depuis l'écran de connexion.
+- Accueil refondu autour du territoire, des parcours existants et des cinq niveaux de qualité de données.
+- Marqueurs des deux cartes rendus accessibles au clavier ; les objets sans coordonnées ne reçoivent plus de position fictive et le fond est annoncé comme schématique.
+- Dashboard : données chiffrées statiques signalées comme démonstration et raccourci vers le simulateur absent retiré.
+- **Responsive** : aucune barre de défilement horizontale observée aux largeurs 320, 768, 1024 et 1440 ; capture mobile vérifiée. Le bouton de thème reste accessible dans le menu mobile.
+- **Vérifications** : TypeScript OK ; 17 tests Vitest réussis ; le build Next a compilé mais la résolution finale de `/_document` a échoué pendant qu'un serveur `next dev` partageait `.next`.
+- **Limite navigateur** : les pages rendues ont ensuite renvoyé des 404 sur les chunks JS ; l'interaction du menu n'est donc pas vérifiée. Redémarrer le serveur Next puis refaire le contrôle navigateur.
+- **À reprendre** : poursuivre les listes, formulaires, dashboards et cartes.
+
 ---
 
 ## 1. Ce qui est validé
@@ -39,29 +52,30 @@
 
 ## 3. Avancement par module
 
-| Module | Statut | Tests | Documentation | Blocage |
-|---|---|---|---|---|
-| Architecture | Terminé | Passant | Fait | — |
-| Auth / rôles | Terminé | Passant (Vitest OK) | Fait | — |
-| Base de données | Terminé | Passant (Prisma OK) | Fait | — |
-| Theme Light/Dark | Terminé | Passant | Fait | — |
-| Gisements | Terminé | Passant (Vitest OK) | Fait (`specs/feedstocks.md`) | — |
-| Unités | Terminé | Passant (Vitest OK) | Fait (`specs/biogas-units.md`) | — |
-| Déploiement Vercel | Configuration Prête | Build OK (`npm run build`) | Fait (`docs/DEPLOYMENT_VERCEL.md`) | — |
-| Carte | Opérationnelle | Visualisation OK | Fait | — |
-| Simulateur | À démarrer (Phase 4) | — | Fait (`specs/simulator.md`) | — |
-| Matching | À démarrer (Phase 5) | — | Fait (`specs/matching.md`) | — |
-| Dashboards | À démarrer (Phase 6) | — | Fait (`specs/dashboards.md`) | — |
-| Exports | À démarrer (Phase 7) | — | Fait (`specs/exports.md`) | — |
-| Admin | Socle prêt | — | Fait (`specs/auth.md`) | — |
-| Sécurité | Implémenté côté serveur | Passant | Fait (`AGENTS.md`) | — |
-| Déploiement | Prêt pour dev/staging | Build OK | Fait (`.env.example`) | — |
+| Module             | Statut                  | Tests                      | Documentation                      | Blocage |
+| ------------------ | ----------------------- | -------------------------- | ---------------------------------- | ------- |
+| Architecture       | Terminé                 | Passant                    | Fait                               | —       |
+| Auth / rôles       | Terminé                 | Passant (Vitest OK)        | Fait                               | —       |
+| Base de données    | Terminé                 | Passant (Prisma OK)        | Fait                               | —       |
+| Theme Light/Dark   | Terminé                 | Passant                    | Fait                               | —       |
+| Gisements          | Terminé                 | Passant (Vitest OK)        | Fait (`specs/feedstocks.md`)       | —       |
+| Unités             | Terminé                 | Passant (Vitest OK)        | Fait (`specs/biogas-units.md`)     | —       |
+| Déploiement Vercel | Configuration Prête     | Build OK (`npm run build`) | Fait (`docs/DEPLOYMENT_VERCEL.md`) | —       |
+| Carte              | Opérationnelle          | Visualisation OK           | Fait                               | —       |
+| Simulateur         | À démarrer (Phase 4)    | —                          | Fait (`specs/simulator.md`)        | —       |
+| Matching           | À démarrer (Phase 5)    | —                          | Fait (`specs/matching.md`)         | —       |
+| Dashboards         | À démarrer (Phase 6)    | —                          | Fait (`specs/dashboards.md`)       | —       |
+| Exports            | À démarrer (Phase 7)    | —                          | Fait (`specs/exports.md`)          | —       |
+| Admin              | Socle prêt              | —                          | Fait (`specs/auth.md`)             | —       |
+| Sécurité           | Implémenté côté serveur | Passant                    | Fait (`AGENTS.md`)                 | —       |
+| Déploiement        | Prêt pour dev/staging   | Build OK                   | Fait (`.env.example`)              | —       |
 
 ---
 
 ## 4. Journal des Incréments
 
 ### Incrément 1 — 2026-10-06
+
 - **Date** : 2026-10-06
 - **Nom** : Incrément 1 — Audit, initialisation de la stack, socle DB & authentification serveur (RBAC)
 - **Réalisé** :
@@ -73,7 +87,7 @@
   - Routes d'API `/api/auth/login`, `/api/auth/register`, `/api/auth/me`, `/api/auth/logout`.
   - Compte de démonstration seedé avec statut de qualité `DEMONSTRATION`.
   - Design system sombre modernisé avec Slogan **« Du déchet au watt, de la donnée à la décision »** et la chaîne de valeur **Gisements → Potentiel → Unités → Matching → Décision**.
-- **Tests** : 
+- **Tests** :
   - Suite de tests unitaires Vitest automatisés (`tests/auth/permissions.test.ts`, `tests/auth/jwt.test.ts`). **9 tests exécutés et validés (100% passing)**.
   - Compilation Next.js (`npm run build`) validée avec **0 erreur**.
 - **Prochaine étape** : Étape B — Module Gisements (CRUD propriétaire, confidentialité, carte interactive des gisements).

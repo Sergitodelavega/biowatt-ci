@@ -1,4 +1,4 @@
-# TASKS.md — BIOWATT-CI
+****# TASKS.md — BIOWATT-CI
 
 ## Légende
 
@@ -12,6 +12,7 @@
 # Phase 0 — Préparation
 
 ## P0.1 — Initialisation du dépôt
+
 - [x] Créer le dépôt BIOWATT-CI
 - [x] Ajouter `SPEC.md`
 - [x] Ajouter `AGENTS.md`
@@ -24,6 +25,7 @@
 - [x] Ajouter les règles de formatage/lint
 
 ## P0.2 — Architecture
+
 - [x] Valider la stack (Next.js 14+ App Router, TypeScript, Tailwind CSS, Prisma, PostgreSQL + PostGIS)
 - [x] Valider la stratégie d’authentification (JWT HTTP-only cookies + validation serveur RBAC)
 - [x] Valider PostgreSQL/PostGIS
@@ -33,6 +35,7 @@
 - [x] Définir la stratégie de stockage privé
 
 ## P0.3 — Décisions métier
+
 - [x] Valider les rôles (ADMIN_BIOWATT, STATE, COLLECTIVITY, FEEDSTOCK_OWNER, BIOGAS_OPERATOR, PUBLIC_VISITOR)
 - [x] Valider les statuts de qualité (DEMONSTRATION, DECLARE, DOCUMENTARY_VERIFIED, SITE_VERIFIED, MEASURED)
 - [x] Valider les règles de confidentialité (Isolations des détenteurs, masquage des coordonnées précises)
@@ -45,6 +48,7 @@
 # Phase 1 — Socle technique
 
 ## P1.1 — Projet
+
 - [x] Initialiser Next.js + TypeScript
 - [x] Configurer Tailwind
 - [x] Configurer lint/format
@@ -54,6 +58,7 @@
 - [x] Créer navigation principale
 
 ## P1.2 — Base de données
+
 - [x] Configurer PostgreSQL / Schema Prisma
 - [x] Activer PostGIS / Coordonnées floues
 - [x] Créer migrations initiales / Prisma Client
@@ -67,6 +72,7 @@
 - [x] Ajouter contraintes d’intégrité
 
 ## P1.3 — Authentification
+
 - [x] Inscription (AVEC gestion manuelle du statut PENDING pour comptes institutionnels/pros)
 - [x] Connexion (Jetons JWT sécurisés HTTP-only)
 - [x] Déconnexion
@@ -82,6 +88,7 @@
 # Phase 2 — Gisements
 
 ## P2.1 — CRUD gisement
+
 - [x] Création propriétaire (Formulaire de déclaration avec calcul automatique fermentescible)
 - [x] Lecture propriétaire & anonymisée
 - [x] Modification propriétaire (Contrôlé par `canEditFeedstock`)
@@ -91,6 +98,7 @@
 - [x] Historique minimal & audit logs
 
 ## P2.2 — Carte
+
 - [x] Carte Côte d’Ivoire (`components/FeedstockMap.tsx` interactive)
 - [x] Couche gisements
 - [ ] Couche unités (Phase 3)
@@ -101,6 +109,7 @@
 - [x] Protection coordonnées exactes (`lib/utils/privacy.ts`)
 
 ## P2.3 — Fiche gisement
+
 - [x] Informations générales
 - [x] Données de volume (Tonnage total et fermentescible)
 - [x] Fréquence/régularité
@@ -164,6 +173,7 @@
 # Phase 6 — Dashboards
 
 ## État
+
 - [ ] KPI nationaux
 - [ ] Répartition territoriale
 - [ ] Carte agrégée
@@ -172,6 +182,7 @@
 - [ ] Potentiel agrégé
 
 ## Collectivité
+
 - [ ] KPI territoire
 - [ ] Gisements
 - [ ] Unités
@@ -179,18 +190,21 @@
 - [ ] Signalement/proposition
 
 ## Détenteur
+
 - [ ] Mes gisements
 - [ ] Qualité des données
 - [ ] Matching entrant
 - [ ] Demandes de contact
 
 ## Valorisateur
+
 - [ ] Mon unité
 - [ ] Besoins
 - [ ] Matching
 - [ ] Demandes envoyées
 
 ## Admin
+
 - [ ] Validation comptes
 - [ ] Validation données
 - [ ] Gestion utilisateurs
@@ -241,6 +255,24 @@
 - [ ] Procédure restauration
 - [ ] Compte administrateur BIOWATT-CI
 - [ ] Documentation de remise
+
+---
+
+# UX / Interface
+
+- [x] Audit initial des pages, de la navigation, des formulaires et des cartes
+- [x] Tokens visuels, thème clair initial et focus clavier global
+- [x] Navigation principale responsive limitée aux routes disponibles
+- [x] Refonte de l'accueil et retrait du préremplissage des mots de passe démo
+- [x] Marqueurs cartographiques accessibles au clavier et coordonnées absentes non inventées
+- [x] Valeurs statiques du dashboard identifiées comme données de démonstration
+- [x] Suppression du raccourci dashboard vers le simulateur non disponible
+- [ ] Vérification responsive navigateur après redémarrage isolé du serveur Next.js
+- [ ] Refonte des listes, cartes métier et états vides/erreurs
+- [ ] Refonte des formulaires et validation accessible
+- [ ] Adapter les dashboards aux données autorisées et signaler leur fraîcheur
+- [ ] Décider du fournisseur cartographique avant remplacement du schéma SVG
+- [ ] Réaliser les interfaces simulateur et matching avec leurs règles métier
 
 ---
 

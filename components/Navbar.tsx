@@ -1,11 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { Shield, Map, Flame, Calculator, GitMerge, LayoutDashboard, UserCheck, LogIn, LogOut, Leaf } from 'lucide-react';
-import { Role, AccountStatus } from '@/lib/types/auth';
-import { ThemeToggle } from './ThemeToggle';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Flame,
+  Home,
+  LayoutDashboard,
+  Leaf,
+  LogIn,
+  LogOut,
+  Map,
+  Menu,
+  UserCheck,
+  X,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Role, AccountStatus } from "@/lib/types/auth";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface SessionUser {
   id: string;
@@ -18,152 +30,200 @@ interface SessionUser {
   organizationName?: string | null;
 }
 
+const navigationItems: { href: string; label: string; Icon?: LucideIcon }[] = [
+  { href: "/", label: "Accueil", Icon: Home },
+  { href: "/feedstocks", label: "Gisements", Icon: Map },
+  { href: "/units", label: "Unités", Icon: Flame },
+  { href: "/dashboard", label: "Tableau de bord", Icon: LayoutDashboard },
+];
+
+const roleLabels: Record<Role, string> = {
+  ADMIN_BIOWATT: "ADMIN",
+  STATE: "ÉTAT",
+  COLLECTIVITY: "COLLECTIVITÉ",
+  FEEDSTOCK_OWNER: "DÉTENTEUR",
+  BIOGAS_OPERATOR: "VALORISATEUR",
+  PUBLIC_VISITOR: "VISITEUR",
+};
+
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const fetchSession = async () => {
-    try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        setCurrentUser(data.user || null);
-      }
-    } catch {
-      setCurrentUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
-    fetchSession();
+    setMobileNavOpen(false);
+
+    async function fetchSession() {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUser(data.user || null);
+        } else {
+          setCurrentUser(null);
+        }
+      } catch {
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void fetchSession();
   }, [pathname]);
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch("/api/auth/logout", { method: "POST" });
       setCurrentUser(null);
-      router.push('/auth/login');
+      router.push("/auth/login");
       router.refresh();
-    } catch (err) {
-      console.error('Logout error:', err);
+    } catch (error) {
+      console.error("Logout error:", error);
     }
   };
 
-  const getRoleBadge = (role: Role) => {
-    switch (role) {
-      case 'ADMIN_BIOWATT':
-        return <span className="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-xs font-semibold">ADMIN</span>;
-      case 'STATE':
-        return <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-xs font-semibold">ÉTAT</span>;
-      case 'COLLECTIVITY':
-        return <span className="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded text-xs font-semibold">COLLECTIVITÉ</span>;
-      case 'FEEDSTOCK_OWNER':
-        return <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-xs font-semibold">DÉTENTEUR</span>;
-      case 'BIOGAS_OPERATOR':
-        return <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-xs font-semibold">VALORISATEUR</span>;
-      default:
-        return <span className="bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-xs">VISITEUR</span>;
-    }
-  };
+  const renderNavigation = (mobile = false) => (
+    <nav
+      aria-label={mobile ? "Navigation mobile" : "Navigation principale"}
+      className={
+        mobile ? "grid gap-1 p-3" : "hidden items-center gap-1 md:flex"
+      }
+    >
+      {navigationItems.map(({ href, label, Icon }) => {
+        const isActive =
+          href === "/" ? pathname === href : pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            aria-current={isActive ? "page" : undefined}
+            className={`flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors ${
+              isActive
+                ? "bg-[var(--surface-muted)] text-[var(--primary)]"
+                : "text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+            }`}
+          >
+            {Icon && <Icon aria-hidden="true" className="h-4 w-4" />}
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800 dark:border-slate-800 light:border-slate-200 bg-slate-900/90 dark:bg-slate-900/90 light:bg-white/95">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          
-          {/* Logo & Platform Name */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-900/30 group-hover:scale-105 transition-transform">
-              <Leaf className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-slate-100 dark:text-slate-100 light:text-slate-900 flex items-center gap-1.5">
-                BIOWATT<span className="text-emerald-400 font-extrabold">-CI</span>
-              </span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-400 light:text-slate-500 block -mt-1 font-medium">Côte d'Ivoire</span>
-            </div>
-          </Link>
+    <header className="site-header">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2.5"
+          aria-label="BIOWATT-CI, accueil"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--primary)] text-white sm:h-10 sm:w-10">
+            <Leaf aria-hidden="true" className="h-5 w-5" />
+          </span>
+          <span>
+            <span className="block text-base font-bold leading-tight text-[var(--foreground)]">
+              BIOWATT-CI
+            </span>
+            <span className="hidden text-xs text-[var(--muted)] sm:block">
+              Côte d'Ivoire
+            </span>
+          </span>
+        </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 text-sm font-medium">
-            <Link href="/" className="px-3 py-2 text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-slate-800/60 dark:hover:bg-slate-800/60 light:hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5">
-              Accueil
-            </Link>
-            <Link href="/feedstocks" className="px-3 py-2 text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-slate-800/60 dark:hover:bg-slate-800/60 light:hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5">
-              <Map className="w-4 h-4 text-emerald-400" />
-              Gisements
-            </Link>
-            <Link href="/units" className="px-3 py-2 text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-slate-800/60 dark:hover:bg-slate-800/60 light:hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5">
-              <Flame className="w-4 h-4 text-amber-400" />
-              Unités
-            </Link>
-            <Link href="/simulator" className="px-3 py-2 text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-slate-800/60 dark:hover:bg-slate-800/60 light:hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5">
-              <Calculator className="w-4 h-4 text-sky-400" />
-              Simulateur
-            </Link>
-            <Link href="/matching" className="px-3 py-2 text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-slate-800/60 dark:hover:bg-slate-800/60 light:hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5">
-              <GitMerge className="w-4 h-4 text-indigo-400" />
-              Smart Matching
-            </Link>
-            <Link href="/dashboard" className="px-3 py-2 text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-slate-800/60 dark:hover:bg-slate-800/60 light:hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5">
-              <LayoutDashboard className="w-4 h-4 text-purple-400" />
-              Tableau de bord
-            </Link>
-          </nav>
+        {renderNavigation()}
 
-          {/* User Auth & Theme Toggle Section */}
-          <div className="flex items-center space-x-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <span className="hidden sm:block">
             <ThemeToggle />
-
-            {!loading && (
-              currentUser ? (
-                <div className="flex items-center space-x-3">
-                  <div className="text-right hidden sm:block">
-                    <div className="text-sm font-semibold text-slate-100 dark:text-slate-100 light:text-slate-900">
-                      {currentUser.firstName} {currentUser.lastName}
-                    </div>
-                    <div className="flex items-center justify-end space-x-1 mt-0.5">
-                      {getRoleBadge(currentUser.role)}
-                      {currentUser.status === 'PENDING' && (
-                        <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px]">EN ATTENTE</span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Link
-                    href="/dashboard"
-                    className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 hover:border-emerald-500 transition-colors"
-                    title="Mon Tableau de bord"
-                  >
-                    <UserCheck className="w-4 h-4 text-emerald-400" />
-                  </Link>
-
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all flex items-center gap-1 text-xs"
-                    title="Se Déconnecter"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="hidden lg:inline">Déconnexion</span>
-                  </button>
+          </span>
+          {!loading && currentUser && (
+            <>
+              <div className="hidden text-right sm:block">
+                <div className="text-sm font-semibold text-[var(--foreground)]">
+                  {currentUser.firstName} {currentUser.lastName}
                 </div>
-              ) : (
-                <Link
-                  href="/auth/login"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all shadow-md shadow-emerald-950/50 flex items-center gap-2"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Connexion
-                </Link>
-              )
+                <div className="flex items-center justify-end gap-1 text-xs text-[var(--muted)]">
+                  <span>{roleLabels[currentUser.role]}</span>
+                  {currentUser.status === "PENDING" && (
+                    <span>· EN ATTENTE</span>
+                  )}
+                </div>
+              </div>
+              <Link
+                href="/dashboard"
+                aria-label="Mon tableau de bord"
+                title="Mon tableau de bord"
+                className="flex h-10 w-10 items-center justify-center rounded-md border bg-[var(--surface)] text-[var(--primary)] hover:bg-[var(--surface-muted)]"
+              >
+                <UserCheck aria-hidden="true" className="h-4 w-4" />
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Se déconnecter"
+                title="Se déconnecter"
+                className="flex h-10 w-10 items-center justify-center rounded-md border border-red-300 text-[var(--danger)] hover:bg-red-50"
+              >
+                <LogOut aria-hidden="true" className="h-4 w-4" />
+              </button>
+            </>
+          )}
+          {!loading && !currentUser && (
+            <Link
+              href="/auth/login"
+              className="hidden min-h-10 items-center gap-2 rounded-md bg-[var(--primary)] px-3 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] sm:flex"
+            >
+              <LogIn aria-hidden="true" className="h-4 w-4" />
+              Connexion
+            </Link>
+          )}
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-md border bg-[var(--surface)] text-[var(--foreground)] md:hidden"
+            aria-label={
+              mobileNavOpen ? "Fermer la navigation" : "Ouvrir la navigation"
+            }
+            aria-expanded={mobileNavOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileNavOpen((open) => !open)}
+          >
+            {mobileNavOpen ? (
+              <X aria-hidden="true" className="h-5 w-5" />
+            ) : (
+              <Menu aria-hidden="true" className="h-5 w-5" />
             )}
-          </div>
+          </button>
         </div>
       </div>
+      {mobileNavOpen && (
+        <div
+          id="mobile-navigation"
+          className="border-t bg-[var(--surface)] md:hidden"
+        >
+          {renderNavigation(true)}
+          <div className="flex items-center justify-between border-t px-4 py-2 sm:hidden">
+            <span className="text-sm text-[var(--muted)]">Thème</span>
+            <ThemeToggle />
+          </div>
+          {!loading && !currentUser && (
+            <div className="px-3 pb-3">
+              <Link
+                href="/auth/login"
+                className="flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-semibold text-white"
+              >
+                <LogIn aria-hidden="true" className="h-4 w-4" />
+                Connexion
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
