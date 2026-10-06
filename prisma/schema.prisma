@@ -1,0 +1,212 @@
+// Prisma schema for BIOWATT-CI
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN_BIOWATT
+  STATE
+  COLLECTIVITY
+  FEEDSTOCK_OWNER
+  BIOGAS_OPERATOR
+  PUBLIC_VISITOR
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+enum DataQualityStatus {
+  DEMONSTRATION
+  DECLARE
+  DOCUMENTARY_VERIFIED
+  SITE_VERIFIED
+  MEASURED
+}
+
+enum MatchingStatus {
+  A_VERIFIER_TERRAIN
+  COMPATIBLE_SOUS_CONDITIONS
+  NON_PRIORITAIRE
+}
+
+enum ContactRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // e.g., STATE_AGENCY, COLLECTIVITY, PRIVATE_COMPANY, COOPERATIVE
+  territory   String?  // e.g., District, Region, Commune
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users          User[]
+  feedstockSites FeedstockSite[]
+  biogasUnits    BiogasUnit[]
+}
+
+model User {
+  id             String        @id @default(uuid())
+  email          String        @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  phone          String?
+  role           Role          @default(PUBLIC_VISITOR)
+  status         AccountStatus @default(PENDING)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  justification  String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  auditLogs           AuditLog[]
+  sentMatchingRequests MatchingRequest[] @relation("OperatorRequests")
+}
+
+model DataSource {
+  id             String   @id @default(uuid())
+  name           String   // Source name e.g. "Enquête Ministère HDF 2024", "Déclaration Exploitant"
+  type           String   // e.g., SURVEY, DECLARATION, SATELLITE, FIELD_MEASURE
+  reliabilityScore Float  @default(1.0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  feedstockSites FeedstockSite[]
+  biogasUnits    BiogasUnit[]
+}
+
+model FeedstockSite {
+  id                          String            @id @default(uuid())
+  name                        String
+  ownerOrganizationId         String
+  ownerOrganization           Organization      @relation(fields: [ownerOrganizationId], references: [id])
+  sector                      String            // e.g., "marché", "huilerie", "élevage", "abattoir", "coopérative", "manioc", "agro-industrie"
+  substrateType               String            // e.g., "rafles de palme", "effluents d'abattoir", "déchets de marché"
+  
+  latitude                    Float?            // Coordonnées stockées pour PostGIS/spatial index
+  longitude                   Float?
+  fuzzyLatitude               Float?            // Coordonnées dégradées pour affichage public
+  fuzzyLongitude              Float?
+
+  totalWasteVolume            Float             // Tonnage ou m3 / an
+  fermentableFraction         Float             // Pourcentage (0-100)
+  estimatedFermentableVolume Float             // Tonnage fermentescible estimé
+  frequency                   String            // e.g., "quotidien", "hebdomadaire", "saisonnier"
+  regularity                  String            // e.g., "constante", "variable"
+  seasonality                 String?           // Mois ou période de pointe
+  
+  sortingStatus               String            // e.g., "trié à la source", "mélangé"
+  contaminationStatus         String            // e.g., "faible", "moyenne", "élevée"
+  pretreatment                String?           // e.g., "broyage", "séchage", "aucun"
+
+  dataQualityStatus           DataQualityStatus @default(DECLARE)
+  sourceId                    String?
+  source                      DataSource?       @relation(fields: [sourceId], references: [id])
+  sharingConsent              Boolean           @default(false)
+  status                      String            @default("ACTIVE") // ACTIVE, ARCHIVED, DRAFT
+
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+
+  matchingRequests            MatchingRequest[]
+  verifications               Verification[]
+}
+
+model BiogasUnit {
+  id                     String            @id @default(uuid())
+  name                   String
+  operatorOrganizationId String
+  operatorOrganization   Organization      @relation(fields: [operatorOrganizationId], references: [id])
+  
+  latitude               Float?
+  longitude              Float?
+  fuzzyLatitude          Float?
+  fuzzyLongitude         Float?
+
+  technology             String            // e.g., "CSTR", "Plug Flow", "Lagune couverte"
+  commissioningYear      Int?
+  operationalStatus      String            // e.g., "opérationnelle", "en construction", "planifiée", "arrêtée"
+  
+  dailySubstrateNeed     Float             // Besoins en tonnes/jour
+  capacity               Float             // Capacité max de traitement (tonnes/jour ou m3 biogaz/jour)
+  acceptedSubstrates     String            // Liste sérialisée (ex: JSON ou CSV de types acceptés)
+  
+  declaredProduction     Float?            // Production déclarée (m3/an ou kWh)
+  productionReliability  String?           // Fiabilité déclarée / mesurée
+
+  sourceId               String?
+  source                 DataSource?       @relation(fields: [sourceId], references: [id])
+  dataQualityStatus      DataQualityStatus @default(DECLARE)
+  
+  protectedContactEmail  String?
+  protectedContactPhone  String?
+
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  matchingRequests       MatchingRequest[]
+  verifications          Verification[]
+}
+
+model Verification {
+  id              String            @id @default(uuid())
+  entityType      String            // "FEEDSTOCK_SITE" ou "BIOGAS_UNIT"
+  feedstockSiteId String?
+  feedstockSite   FeedstockSite?    @relation(fields: [feedstockSiteId], references: [id])
+  biogasUnitId    String?
+  biogasUnit      BiogasUnit?       @relation(fields: [biogasUnitId], references: [id])
+  
+  previousStatus  DataQualityStatus
+  newStatus       DataQualityStatus
+  verifiedBy      String            // User ID d'un ADMIN_BIOWATT
+  notes           String?
+  createdAt       DateTime          @default(now())
+}
+
+model MatchingRequest {
+  id                   String               @id @default(uuid())
+  feedstockSiteId      String
+  feedstockSite        FeedstockSite        @relation(fields: [feedstockSiteId], references: [id])
+  biogasUnitId         String
+  biogasUnit           BiogasUnit           @relation(fields: [biogasUnitId], references: [id])
+  
+  requesterUserId      String
+  requesterUser        User                 @relation("OperatorRequests", fields: [requesterUserId], references: [id])
+
+  distanceKm           Float
+  mobilizableVolumeEst Float
+  needCoveragePercent  Float
+  compatibilityScore   Float
+  matchingCategory     MatchingStatus
+
+  status               ContactRequestStatus @default(PENDING)
+  notes                String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String?
+  actorUser   User?    @relation(fields: [actorUserId], references: [id])
+  action      String   // e.g., "CREATE", "UPDATE", "DELETE", "LOGIN", "EXPORT", "VALIDATE_ACCOUNT"
+  entityType  String   // e.g., "USER", "FEEDSTOCK_SITE", "BIOGAS_UNIT", "EXPORT"
+  entityId    String?
+  metadata    String?  // JSON stringified details
+  timestamp   DateTime @default(now())
+}
