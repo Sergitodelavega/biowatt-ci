@@ -10,6 +10,17 @@
 
 **Dernière mise à jour : 2026-10-06**
 
+## Connexion démo par rôle — Incrément 3
+
+- L'écran de connexion propose cinq boutons d'accès direct en développement local ; aucun email ni mot de passe n'est à saisir.
+- La nouvelle route `/api/auth/demo` n'accepte que les cinq rôles autorisés, vérifie le rôle et le statut du compte s'il existe en base, et n'est pas disponible en production.
+- La connexion normale reste séparée : elle vérifie le mot de passe bcrypt en base, renvoie `401` si le compte ou le secret est invalide, `503` si la base est indisponible.
+- Le seed exige `DEMO_SEED_PASSWORD` (12 caractères minimum) au lieu d'un mot de passe partagé dans le code ; variable documentée sans valeur secrète dans `.env.example`.
+- Tests ciblés : 7 cas API couvrent connexion normale et accès démo par rôle.
+- Le navigateur affiche les cinq boutons ; un appel local direct à `/api/auth/demo` répond `200`, renvoie le rôle demandé et émet le cookie HTTP-only.
+- Le clic UI reste à revalider après résolution des 404 de chunks JS déjà présents sur le serveur Next actif.
+- La variable de seed n'affecte pas les hashes de comptes déjà créés en base ; aucune rotation de mot de passe existant n'est effectuée automatiquement.
+
 ## UX/UI — Incrément 2
 
 - Audit initial réalisé sur les pages existantes, la navigation, les cartes, les formulaires et les spécifications métier.

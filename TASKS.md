@@ -264,6 +264,10 @@
 - [x] Tokens visuels, thème clair initial et focus clavier global
 - [x] Navigation principale responsive limitée aux routes disponibles
 - [x] Refonte de l'accueil et retrait du préremplissage des mots de passe démo
+- [x] Connexion directe par rôle limitée au développement local, sans saisie d'email ni de mot de passe
+- [x] Route normale email/mot de passe vérifiée en base et route démo séparée côté serveur
+- [x] Refus des rôles absents et des comptes existants non actifs dans la route démo
+- [x] Mot de passe du seed déplacé vers `DEMO_SEED_PASSWORD`
 - [x] Marqueurs cartographiques accessibles au clavier et coordonnées absentes non inventées
 - [x] Valeurs statiques du dashboard identifiées comme données de démonstration
 - [x] Suppression du raccourci dashboard vers le simulateur non disponible

@@ -3,6 +3,16 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
+import type { Role } from "@/lib/types/auth";
+
+const demoAccounts: { role: Role; label: string }[] = [
+  { role: "ADMIN_BIOWATT", label: "Administration BIOWATT-CI" },
+  { role: "STATE", label: "État / Ministère" },
+  { role: "COLLECTIVITY", label: "Collectivité" },
+  { role: "FEEDSTOCK_OWNER", label: "Détenteur de gisement" },
+  { role: "BIOGAS_OPERATOR", label: "Opérateur biogaz" },
+];
+const isDevelopment = process.env.NODE_ENV === "development";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +20,32 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [demoLoadingRole, setDemoLoadingRole] = useState<Role | null>(null);
+
+  const handleDemoLogin = async (role: Role) => {
+    setError(null);
+    setDemoLoadingRole(role);
+
+    try {
+      const response = await fetch("/api/auth/demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Connexion de démonstration impossible.");
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDemoLoadingRole(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +87,31 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {isDevelopment && (
+          <section className="mb-6 border-b border-slate-700 pb-6" aria-labelledby="demo-login-title">
+            <h2 id="demo-login-title" className="mb-3 text-sm font-semibold text-slate-200">
+              Accès rapide par rôle
+            </h2>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {demoAccounts.map((account) => (
+                <button
+                  key={account.role}
+                  type="button"
+                  disabled={demoLoadingRole !== null}
+                  onClick={() => void handleDemoLogin(account.role)}
+                  className="flex min-h-11 items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:border-emerald-500 hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60"
+                >
+                  <span>{account.label}</span>
+                  <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-400" />
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              Disponible uniquement sur le serveur de développement local.
+            </p>
+          </section>
+        )}
+
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-3">
             <AlertCircle className="w-5 h-5 shrink-0" />
@@ -73,7 +134,9 @@ export default function LoginPage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                }}
                 placeholder="nom@organisation.ci"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
               />

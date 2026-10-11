@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import { verifyPassword, createSessionToken } from '@/lib/auth/jwt';
-import { INITIAL_USERS } from '@/lib/store/localStore';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -23,32 +23,27 @@ export async function POST(req: NextRequest) {
 
     const { email, password } = parsed.data;
 
-    let user: any = null;
+    let user: Prisma.UserGetPayload<{ include: { organization: true } }> | null;
 
     try {
       user = await prisma.user.findUnique({
         where: { email },
         include: { organization: true },
       });
-      if (user) {
-        const isMatch = await verifyPassword(password, user.passwordHash);
-        if (!isMatch) {
-          return NextResponse.json({ error: 'Identifiants incorrects.' }, { status: 401 });
-        }
-      }
     } catch {
-      // Prototype DB Fallback
-      user = INITIAL_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      return NextResponse.json(
+        { error: 'Le service de connexion est temporairement indisponible.' },
+        { status: 503 }
+      );
     }
 
     if (!user) {
-      // Prototype Fallback for Demo Accounts
-      const demoMatch = INITIAL_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (demoMatch) {
-        user = demoMatch;
-      } else {
-        return NextResponse.json({ error: 'Identifiants incorrects.' }, { status: 401 });
-      }
+      return NextResponse.json({ error: 'Identifiants incorrects.' }, { status: 401 });
+    }
+
+    const isMatch = await verifyPassword(password, user.passwordHash);
+    if (!isMatch) {
+      return NextResponse.json({ error: 'Identifiants incorrects.' }, { status: 401 });
     }
 
     if (user.status === 'SUSPENDED') {
@@ -66,7 +61,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       status: user.status,
       organizationId: user.organizationId || null,
-      organizationName: user.organizationName || user.organization?.name || null,
+      organizationName: user.organization?.name || null,
     };
 
     const token = await createSessionToken(sessionUser);

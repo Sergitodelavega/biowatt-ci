@@ -6,7 +6,11 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding demonstration database...');
 
-  const defaultPasswordHash = await bcrypt.hash('DemoBiowatt2026!', 10);
+  const demoSeedPassword = process.env.DEMO_SEED_PASSWORD;
+  if (!demoSeedPassword || demoSeedPassword.length < 12) {
+    throw new Error('DEMO_SEED_PASSWORD must be set to at least 12 characters.');
+  }
+  const demoPasswordHash = await bcrypt.hash(demoSeedPassword, 10);
 
   // 1. Create Organizations
   const adminOrg = await prisma.organization.create({
@@ -59,7 +63,7 @@ async function main() {
     data: [
       {
         email: 'admin@biowatt.ci',
-        passwordHash: defaultPasswordHash,
+        passwordHash: demoPasswordHash,
         firstName: 'Konan',
         lastName: 'Kouassi',
         role: Role.ADMIN_BIOWATT,
@@ -68,7 +72,7 @@ async function main() {
       },
       {
         email: 'etat@environnement.gouv.ci',
-        passwordHash: defaultPasswordHash,
+        passwordHash: demoPasswordHash,
         firstName: 'Aminata',
         lastName: 'Touré',
         role: Role.STATE,
@@ -77,7 +81,7 @@ async function main() {
       },
       {
         email: 'mairie@sanpedro.ci',
-        passwordHash: defaultPasswordHash,
+        passwordHash: demoPasswordHash,
         firstName: 'Yao',
         lastName: 'Brou',
         role: Role.COLLECTIVITY,
@@ -86,7 +90,7 @@ async function main() {
       },
       {
         email: 'detenteur@palm-ci.co',
-        passwordHash: defaultPasswordHash,
+        passwordHash: demoPasswordHash,
         firstName: 'Gnamien',
         lastName: 'Kouadjo',
         role: Role.FEEDSTOCK_OWNER,
@@ -95,7 +99,7 @@ async function main() {
       },
       {
         email: 'operateur@biogaz.ci',
-        passwordHash: defaultPasswordHash,
+        passwordHash: demoPasswordHash,
         firstName: 'Marc',
         lastName: 'Diallo',
         role: Role.BIOGAS_OPERATOR,
@@ -104,7 +108,7 @@ async function main() {
       },
       {
         email: 'attente@societe.ci',
-        passwordHash: defaultPasswordHash,
+        passwordHash: demoPasswordHash,
         firstName: 'Adama',
         lastName: 'Traoré',
         role: Role.FEEDSTOCK_OWNER,
